@@ -2,6 +2,7 @@ pub mod constants;
 pub mod components;
 pub mod bundles;
 pub mod systems;
+pub mod plugins;
 
 /// Re-export the most used pieces for ergonomic `use mygame::prelude::*;`
 pub mod prelude {
@@ -9,4 +10,5 @@ pub mod prelude {
     pub use crate::bundles::*;
     pub use crate::constants::*;
     pub use crate::systems::*;
+    pub use crate::plugins::*;
 }

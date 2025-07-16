@@ -1,6 +1,6 @@
-use bevy::prelude::*;
 use crate::bundles::*;
 use crate::components::*;
+use bevy::prelude::*;
 
 /// Spawn the player sprite and a 2D camera.
 pub fn spawn_player(

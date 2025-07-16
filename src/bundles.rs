@@ -11,4 +11,3 @@ pub struct MovableBundle {
     pub phy_translation: PhysicalTranslation, // TODO: Ensure phy_translation is initialized to the same as transform
     pub prev_phy_translation: PreviousPhysicalTranslation,
 }
-

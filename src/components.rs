@@ -47,8 +47,6 @@ pub struct PhysicalTranslation(pub Vec3);
 #[reflect(Component)]
 pub struct PreviousPhysicalTranslation(pub Vec3);
 
-
-
 #[derive(Component)]
 pub struct Wall;
 

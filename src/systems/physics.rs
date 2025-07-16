@@ -20,6 +20,7 @@ pub fn advance_physics(
     >,
 ) {
 
+    let dt = fixed_time.delta_secs();
 
     for (
         mut current_physical_translation,
@@ -30,24 +31,25 @@ pub fn advance_physics(
     ) in query.iter_mut()
     {
         if acceleration.0 == Vec3::ZERO {
-            if DEFAULT_DECELERATION >= velocity.0.length() {
+            let drag_modulo = DRAG * input.cnt as f32 * dt;
+            if drag_modulo >= velocity.0.length() {
                 velocity.0 = Vec3::ZERO;
             } else {
-                let deceleration_vec = velocity.0.normalize() * DEFAULT_DECELERATION;
-                velocity.0 -= deceleration_vec;
+                let drag_vec = velocity.0.normalize() * drag_modulo;
+                velocity.0 -= drag_vec;
             }
         } else {
-            velocity.0 += acceleration.0;
+            velocity.0 += acceleration.0 * dt;
             if velocity.0.length() > MAX_SPEED {
                 velocity.0 = velocity.normalize_or_zero() * MAX_SPEED;
             }
         }
 
         previous_physical_translation.0 = current_physical_translation.0;
-        current_physical_translation.0 += velocity.0 * fixed_time.delta_secs();
+        current_physical_translation.0 += velocity.0 * dt;
 
         // Reset the input accumulator, as we are currently consuming all input that happened since the last fixed timestep.
-        input.vec = Vec2::ZERO;
+        *input = default();
     }
 }
 

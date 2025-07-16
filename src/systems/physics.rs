@@ -1,6 +1,5 @@
+use crate::{components::*, prelude::PhysicsConfig};
 use bevy::prelude::*;
-use crate::components::*;
-use crate::constants::*;
 
 /// Advance the physics simulation by one fixed timestep. This may run zero or multiple times per frame.
 ///
@@ -8,30 +7,36 @@ use crate::constants::*;
 /// We are being explicit here for clarity.
 pub fn advance_physics(
     fixed_time: Res<Time<Fixed>>,
+    cfg: Res<PhysicsConfig>,
     mut query: Query<
         (
             &mut PhysicalTranslation,
             &mut PreviousPhysicalTranslation,
             &mut AccumulatedInput,
             &mut Velocity,
-            &Acceleration,
+            &mut Acceleration,
         ),
         With<Movable>,
     >,
 ) {
-
     let dt = fixed_time.delta_secs();
+    let max_speed_sq = cfg.max_speed_sq();
 
     for (
         mut current_physical_translation,
         mut previous_physical_translation,
         mut input,
         mut velocity,
-        acceleration,
+        mut acceleration,
     ) in query.iter_mut()
     {
+        // Need to normalize and scale because otherwise
+        // diagonal movement would be faster than horizontal or vertical movement.
+        // This effectively averages the accumulated input.
+        acceleration.0 = input.vec.extend(0.0).normalize_or_zero() * cfg.acceleration;
+
         if acceleration.0 == Vec3::ZERO {
-            let drag_modulo = DRAG * input.cnt as f32 * dt;
+            let drag_modulo = cfg.drag * input.cnt as f32 * dt;
 
             if (drag_modulo * drag_modulo) >= velocity.0.length_squared() {
                 velocity.0 = Vec3::ZERO;
@@ -41,8 +46,8 @@ pub fn advance_physics(
             }
         } else {
             velocity.0 += acceleration.0 * dt;
-            if velocity.0.length_squared() > MAX_SPEED2 {
-                velocity.0 = velocity.normalize_or_zero() * MAX_SPEED;
+            if velocity.0.length_squared() > max_speed_sq {
+                velocity.0 = velocity.normalize_or_zero() * cfg.max_speed;
             }
         }
 

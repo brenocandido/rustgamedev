@@ -1,5 +1,3 @@
-pub const MAX_SPEED: f32 = 210.0;
-pub const MAX_SPEED2: f32 = MAX_SPEED * MAX_SPEED;
-pub const DRAG: f32 = 210.0;
-
-pub const ACCELERATION: f32 = 210.0;
+pub const DEFAULT_MAX_SPEED: f32 = 500.0;
+pub const DEFAULT_DRAG: f32 = 250.0;
+pub const DEFAULT_ACCELERATION: f32 = 1000.0;

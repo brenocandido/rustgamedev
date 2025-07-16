@@ -26,6 +26,8 @@ impl Plugin for SpawnerPlugin {
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
         app
+            // Constants used for physics systems.
+            .insert_resource(PhysicsConfig::default())
             // Advance the physics simulation using a fixed timestep.
             .add_systems(FixedUpdate, advance_physics)
             .add_systems(
@@ -54,6 +56,7 @@ impl Plugin for InspectorPlugin {
             .register_type::<PhysicalTranslation>()
             .register_type::<PreviousPhysicalTranslation>()
             .register_type::<Acceleration>()
+            .register_type::<PhysicsConfig>()
             .add_plugins(EguiPlugin::default())
             .add_plugins(WorldInspectorPlugin::default());
     }

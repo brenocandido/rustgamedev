@@ -32,7 +32,8 @@ pub fn advance_physics(
     {
         if acceleration.0 == Vec3::ZERO {
             let drag_modulo = DRAG * input.cnt as f32 * dt;
-            if drag_modulo >= velocity.0.length() {
+
+            if (drag_modulo * drag_modulo) >= velocity.0.length_squared() {
                 velocity.0 = Vec3::ZERO;
             } else {
                 let drag_vec = velocity.0.normalize() * drag_modulo;
@@ -40,7 +41,7 @@ pub fn advance_physics(
             }
         } else {
             velocity.0 += acceleration.0 * dt;
-            if velocity.0.length() > MAX_SPEED {
+            if velocity.0.length_squared() > MAX_SPEED2 {
                 velocity.0 = velocity.normalize_or_zero() * MAX_SPEED;
             }
         }

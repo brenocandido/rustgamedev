@@ -2,13 +2,7 @@ use bevy::prelude::*;
 use bevy_inspector_egui::bevy_egui::EguiPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
-mod constants;
-mod components;
-mod bundles;
-
-mod systems;
-use systems::*;
-use components::*;
+use rustgamedev::prelude::*;
 
 fn main() {
     App::new()

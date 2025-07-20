@@ -65,3 +65,9 @@ pub struct Collider(pub ColliderShape);
 
 #[derive(Event)]
 pub struct CollisionEvent(pub Entity, pub Entity);
+
+#[derive(Event, Default)]
+pub struct SpawnEnemiesEvent {
+    pub count: usize,
+    pub pos: Vec2,
+}

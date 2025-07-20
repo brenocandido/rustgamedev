@@ -1,4 +1,5 @@
 use crate::components::*;
+use crate::resources::*;
 use bevy::prelude::*;
 use bevy::sprite::{Material2d, MeshMaterial2d};
 
@@ -48,6 +49,32 @@ impl<M: Material2d + Clone> Shape2dBundle<M> {
             transform: Transform::from_translation(pos.extend(0.0))
                 .with_scale(Vec3::splat(radius)),
             collider: Collider(ColliderShape::Circle { radius }),
+        }
+    }
+}
+
+#[derive(Bundle)]
+pub struct EnemyBundle {
+    shape: Shape2dBundle<ColorMaterial>,
+    movable: MovableBundle,
+    name: Name,
+}
+
+impl EnemyBundle {
+    pub fn new(
+        meshes: &CoreMeshes,
+        materials: &CoreMaterials,
+        pos: Vec2,
+    ) -> Self {
+        Self {
+            name: Name::new("Enemy"),
+            shape: Shape2dBundle::circle(
+                meshes.circle.clone(),
+                materials.enemy.clone(),   // Handle<ColorMaterial>
+                50.0,
+                pos,
+            ),
+            movable: MovableBundle::default(),
         }
     }
 }

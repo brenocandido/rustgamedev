@@ -113,13 +113,34 @@ pub fn spawn_text(mut commands: Commands) {
 }
 
 pub fn spawn_enemy_on_key(
-    mut commands: Commands,
-    meshes: Res<CoreMeshes>,
-    materials: Res<CoreMaterials>,
+    mut writer: EventWriter<SpawnEnemiesEvent>,
     keys: Res<ButtonInput<KeyCode>>,
 ) {
     if keys.just_pressed(KeyCode::Digit0) {
-        spawn_enemy(&mut commands, &meshes, &materials, Vec2::new(0.0, 150.0));
+        writer.write(SpawnEnemiesEvent {
+            count: 1,
+            ..default()
+        });
+    }
+}
+
+pub fn spawn_enemies_event_handler(
+    mut commands: Commands,
+    meshes: Res<CoreMeshes>,
+    materials: Res<CoreMaterials>,
+    mut reader: EventReader<SpawnEnemiesEvent>,
+) {
+    for SpawnEnemiesEvent { count, pos } in reader.read() {
+        for i in 0..*count {
+            let enemy_pos = pos
+                + Vec2::new(
+                    // sprinkle them horizontally for variety
+                    -200.0 + i as f32 * 80.0,
+                    150.0,
+                );
+
+            spawn_enemy(&mut commands, &meshes, &materials, enemy_pos);
+        }
     }
 }
 

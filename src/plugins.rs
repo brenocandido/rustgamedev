@@ -19,7 +19,11 @@ impl Plugin for GamePlugin {
 
 impl Plugin for SpawnerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, (spawn_text, spawn_player, spawn_map, spawn_enemy));
+        app
+            .add_systems(Startup, load_core_assets)
+            .add_systems(Startup,(spawn_text, spawn_player, spawn_map, spawn_enemy)
+                .after(load_core_assets),
+        );
     }
 }
 

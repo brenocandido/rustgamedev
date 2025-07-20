@@ -1,133 +1,103 @@
 use crate::bundles::*;
 use crate::components::*;
+use crate::resources::*;
+use crate::constants::*;
 use bevy::prelude::*;
+
+pub fn load_core_assets(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+) {
+    // geometry
+    let rect = meshes.add(Mesh::from(Rectangle::default()));
+    let circle = meshes.add(Mesh::from(Circle { radius: 1.0 }));
+
+    // colours
+    let bounds_mat = materials.add(Color::linear_rgb(0.2, 0.2, 0.2));
+    let wall_mat = materials.add(Color::linear_rgb(0.8, 0.7, 0.3));
+    let enemy_mat = materials.add(Color::linear_rgb(0.7, 0.2, 0.3));
+    let player_mat = materials.add(Color::linear_rgb(0.2, 0.7, 0.3));
+
+    commands.insert_resource(CoreMeshes { rect, circle });
+    commands.insert_resource(CoreMaterials {
+        bounds: bounds_mat,
+        wall: wall_mat,
+        enemy: enemy_mat,
+        player: player_mat,
+    });
+}
 
 /// Spawn the player sprite and a 2D camera.
 pub fn spawn_player(
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
+    meshes: Res<CoreMeshes>,
+    materials: Res<CoreMaterials>,
 ) {
-    // 1. Build a mesh straight from the Circle primitive
-    let mesh = meshes.add(Circle::new(50.0));
-
-    // 2. Solid-colour material
-    let green = materials.add(ColorMaterial::from(Color::linear_rgb(0.2, 0.7, 0.3)));
-
-    // 3. Player entity
+    // Player entity
     commands
         .spawn((
             Name::new("Player"),
-            Mesh2d(mesh),          // mesh component
-            MeshMaterial2d(green), // material component
             Player,
-            Collider(ColliderShape::Circle { radius: 50.0 }),
+            Shape2dBundle::circle(
+                meshes.circle.clone(),
+                materials.player.clone(),
+                50.0,
+                Vec2::new(0.0, -150.0),
+            ),
         ))
-        .insert(MovableBundle {
-            transform: Transform::from_scale(Vec3::splat(1.0)),
-            ..default()
-        })
+        .insert(MovableBundle::default())
         .with_children(|parent| {
             parent.spawn((
-                Camera2d,                              // marker component
-                Transform::from_xyz(0.0, 0.0, 1000.0), // where the camera sits
-                GlobalTransform::default(),            // required by the renderer
-                Projection::default(),                 // default orthographic projection
+                Camera2d,                            // marker component
+                Transform::from_xyz(0.0, 0.0, 20.0), // where the camera sits
+                GlobalTransform::default(),          // required by the renderer
+                Projection::default(),               // default orthographic projection
             ));
         });
 }
 
-pub fn spawn_enemy(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-) {
-    // 1. Build a mesh straight from the Circle primitive
-    let mesh = meshes.add(Circle::new(50.0));
-
-    // 2. Solid-colour material
-    let red = materials.add(ColorMaterial::from(Color::linear_rgb(0.7, 0.2, 0.3)));
-
-    // 3. Enemy entity
+pub fn spawn_enemy(mut commands: Commands, meshes: Res<CoreMeshes>, materials: Res<CoreMaterials>) {
+    // Enemy entity
     commands
         .spawn((
             Name::new("Enemy"),
-            Mesh2d(mesh),        // mesh component
-            MeshMaterial2d(red), // material component
-            Collider(ColliderShape::Circle { radius: 50.0 }),
+            Shape2dBundle::circle(
+                meshes.circle.clone(),
+                materials.enemy.clone(),
+                50.0,
+                Vec2::new(0.0, 150.0),
+            ),
         ))
-        .insert(MovableBundle {
-            transform: Transform::from_scale(Vec3::splat(1.0)),
-            ..default()
-        });
+        .insert(MovableBundle::default());
 }
 
 // Spawn the map
-pub fn spawn_map(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-) {
-    let rectangle_mesh = meshes.add(Mesh::from(Rectangle::new(50.0, 100.0)));
-    let color = Color::linear_rgb(0.8, 0.7, 0.3);
-
+pub fn spawn_map(mut commands: Commands, meshes: Res<CoreMeshes>, materials: Res<CoreMaterials>) {
     commands.spawn((
         Wall,
-        Mesh2d(rectangle_mesh),
-        MeshMaterial2d(materials.add(color)),
-        Transform::from_scale(Vec3::splat(1.0)).with_translation(Vec3::new(200.0, 100.0, 0.0)),
-        Collider(ColliderShape::Rect {
-            half_extents: Vec2::new(25.0, 50.0),
-        }),
+        Shape2dBundle::rect(
+            meshes.rect.clone(),
+            materials.wall.clone(),
+            Vec2::new(50.0, 100.0),
+            Vec2::new(200.0, 100.0),
+        ),
     ));
 
-    let hw: f32 = 500.0;
-    let hh: f32 = 500.0;
-    let thickness: f32 = 200.0;
+    let horizontal = Vec2::new((WALL_HALF_W + WALL_THICKNESS) * 2.0, WALL_THICKNESS);
+    let vertical = Vec2::new(WALL_THICKNESS, (WALL_HALF_H + WALL_THICKNESS) * 2.0);
 
-    let height: f32 = (hh + thickness) * 2.0;
-    let width: f32 = (hw + thickness) * 2.0;
-
-    // south wall
-    commands.spawn((
-        Wall,
-        Mesh2d(meshes.add(Mesh::from(Rectangle::new(width, thickness)))),
-        MeshMaterial2d(materials.add(Color::linear_rgb(0.2, 0.2, 0.2))),
-        Transform::from_xyz(0.0, -hh - (thickness / 2.0), 0.0),
-        Collider(ColliderShape::Rect {
-            half_extents: Vec2::new(width / 2.0, thickness / 2.0),
-        }),
-    ));
-    // north wall
-    commands.spawn((
-        Wall,
-        Mesh2d(meshes.add(Mesh::from(Rectangle::new(width, thickness)))),
-        MeshMaterial2d(materials.add(Color::linear_rgb(0.2, 0.2, 0.2))),
-        Transform::from_xyz(0.0, hh + (thickness / 2.0), 0.0),
-        Collider(ColliderShape::Rect {
-            half_extents: Vec2::new(width / 2.0, thickness / 2.0),
-        }),
-    ));
-    // west wall
-    commands.spawn((
-        Wall,
-        Mesh2d(meshes.add(Mesh::from(Rectangle::new(thickness, height)))),
-        MeshMaterial2d(materials.add(Color::linear_rgb(0.2, 0.2, 0.2))),
-        Transform::from_xyz(-hw - (thickness / 2.0), 0.0, 0.0),
-        Collider(ColliderShape::Rect {
-            half_extents: Vec2::new(thickness / 2.0, height / 2.0),
-        }),
-    ));
-    // east wall
-    commands.spawn((
-        Wall,
-        Mesh2d(meshes.add(Mesh::from(Rectangle::new(thickness, height)))),
-        MeshMaterial2d(materials.add(Color::linear_rgb(0.2, 0.2, 0.2))),
-        Transform::from_xyz(hw + (thickness / 2.0), 0.0, 0.0),
-        Collider(ColliderShape::Rect {
-            half_extents: Vec2::new(thickness / 2.0, height / 2.0),
-        }),
-    ));
+    for (size, pos) in [
+        (horizontal, Vec2::new(0.0, -WALL_HALF_H - WALL_THICKNESS * 0.5)), // bottom
+        (horizontal, Vec2::new(0.0, WALL_HALF_H + WALL_THICKNESS * 0.5)),  // top
+        (vertical, Vec2::new(-WALL_HALF_W - WALL_THICKNESS * 0.5, 0.0)),   // left
+        (vertical, Vec2::new(WALL_HALF_W + WALL_THICKNESS * 0.5, 0.0)),    // right
+    ] {
+        commands.spawn((
+            Wall, // <- your marker component
+            Shape2dBundle::rect(meshes.rect.clone(), materials.bounds.clone(), size, pos),
+        ));
+    }
 }
 
 /// Spawn a bit of UI text to explain how to move the player.

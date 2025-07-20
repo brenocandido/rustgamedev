@@ -21,7 +21,7 @@ pub fn spawn_player(
             Mesh2d(mesh),          // mesh component
             MeshMaterial2d(green), // material component
             Player,
-            CircleCollider { radius: 50.0 },
+            Collider(ColliderShape::Circle { radius: 50.0 }),
         ))
         .insert(MovableBundle {
             transform: Transform::from_scale(Vec3::splat(1.0)),
@@ -34,6 +34,31 @@ pub fn spawn_player(
                 GlobalTransform::default(),            // required by the renderer
                 Projection::default(),                 // default orthographic projection
             ));
+        });
+}
+
+pub fn spawn_enemy(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+) {
+    // 1. Build a mesh straight from the Circle primitive
+    let mesh = meshes.add(Circle::new(50.0));
+
+    // 2. Solid-colour material
+    let red = materials.add(ColorMaterial::from(Color::linear_rgb(0.7, 0.2, 0.3)));
+
+    // 3. Player entity
+    commands
+        .spawn((
+            Name::new("Enemy"),
+            Mesh2d(mesh),          // mesh component
+            MeshMaterial2d(red), // material component
+            Collider(ColliderShape::Circle { radius: 50.0 }),
+        ))
+        .insert(MovableBundle {
+            transform: Transform::from_scale(Vec3::splat(1.0)),
+            ..default()
         });
 }
 
@@ -52,9 +77,9 @@ pub fn spawn_map(
         MeshMaterial2d(materials.add(color)),
         Transform::from_scale(Vec3::splat(1.0)).with_translation(Vec3::new(200.0, 100.0, 0.0)),
         Wall,
-        RectCollider {
+        Collider(ColliderShape::Rect {
             half_extents: Vec2::new(25.0, 50.0),
-        },
+        }),
     ));
 }
 

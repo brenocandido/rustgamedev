@@ -54,11 +54,17 @@ pub struct Wall;
 pub struct Player;
 
 #[derive(Component)]
-pub struct CircleCollider {
-    pub radius: f32,
+pub struct Mass(pub f32);
+
+#[derive(Debug, Clone, Copy, PartialEq, Reflect, InspectorOptions)]
+pub enum ColliderShape {
+    Circle { radius: f32 },
+    Rect { half_extents: Vec2 }, // half-size in x and y (or x and z) directions
 }
 
-#[derive(Component)]
-pub struct RectCollider {
-    pub half_extents: Vec2,
-}
+#[derive(Debug, Component, Clone, Copy, PartialEq, Deref, DerefMut, Reflect, InspectorOptions)]
+#[reflect(Component)]
+pub struct Collider(pub ColliderShape);
+
+#[derive(Event)]
+pub struct CollisionEvent(pub Entity, pub Entity);

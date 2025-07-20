@@ -1,7 +1,7 @@
 use crate::bundles::*;
 use crate::components::*;
-use crate::resources::*;
 use crate::constants::*;
+use crate::resources::*;
 use bevy::prelude::*;
 
 pub fn load_core_assets(
@@ -57,21 +57,6 @@ pub fn spawn_player(
         });
 }
 
-pub fn spawn_enemy(mut commands: Commands, meshes: Res<CoreMeshes>, materials: Res<CoreMaterials>) {
-    // Enemy entity
-    commands
-        .spawn((
-            Name::new("Enemy"),
-            Shape2dBundle::circle(
-                meshes.circle.clone(),
-                materials.enemy.clone(),
-                50.0,
-                Vec2::new(0.0, 150.0),
-            ),
-        ))
-        .insert(MovableBundle::default());
-}
-
 // Spawn the map
 pub fn spawn_map(mut commands: Commands, meshes: Res<CoreMeshes>, materials: Res<CoreMaterials>) {
     commands.spawn((
@@ -88,10 +73,19 @@ pub fn spawn_map(mut commands: Commands, meshes: Res<CoreMeshes>, materials: Res
     let vertical = Vec2::new(WALL_THICKNESS, (WALL_HALF_H + WALL_THICKNESS) * 2.0);
 
     for (size, pos) in [
-        (horizontal, Vec2::new(0.0, -WALL_HALF_H - WALL_THICKNESS * 0.5)), // bottom
-        (horizontal, Vec2::new(0.0, WALL_HALF_H + WALL_THICKNESS * 0.5)),  // top
-        (vertical, Vec2::new(-WALL_HALF_W - WALL_THICKNESS * 0.5, 0.0)),   // left
-        (vertical, Vec2::new(WALL_HALF_W + WALL_THICKNESS * 0.5, 0.0)),    // right
+        (
+            horizontal,
+            Vec2::new(0.0, -WALL_HALF_H - WALL_THICKNESS * 0.5),
+        ), // bottom
+        (
+            horizontal,
+            Vec2::new(0.0, WALL_HALF_H + WALL_THICKNESS * 0.5),
+        ), // top
+        (
+            vertical,
+            Vec2::new(-WALL_HALF_W - WALL_THICKNESS * 0.5, 0.0),
+        ), // left
+        (vertical, Vec2::new(WALL_HALF_W + WALL_THICKNESS * 0.5, 0.0)), // right
     ] {
         commands.spawn((
             Wall, // <- your marker component
@@ -116,4 +110,31 @@ pub fn spawn_text(mut commands: Commands) {
                 ..default()
             },
         ));
+}
+
+pub fn spawn_enemy_on_key(
+    mut commands: Commands,
+    meshes: Res<CoreMeshes>,
+    materials: Res<CoreMaterials>,
+    keys: Res<ButtonInput<KeyCode>>,
+) {
+    if keys.just_pressed(KeyCode::Digit0) {
+        spawn_enemy(&mut commands, &meshes, &materials, Vec2::new(0.0, 150.0));
+    }
+}
+
+// Helper function
+pub fn spawn_enemy(
+    commands: &mut Commands,
+    meshes: &Res<CoreMeshes>,
+    materials: &Res<CoreMaterials>,
+    pos: Vec2,
+) {
+    // Enemy entity
+    commands
+        .spawn((
+            Name::new("Enemy"),
+            Shape2dBundle::circle(meshes.circle.clone(), materials.enemy.clone(), 50.0, pos),
+        ))
+        .insert(MovableBundle::default());
 }

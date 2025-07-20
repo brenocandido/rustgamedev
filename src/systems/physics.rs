@@ -33,10 +33,10 @@ pub fn advance_physics(
         // Need to normalize and scale because otherwise
         // diagonal movement would be faster than horizontal or vertical movement.
         // This effectively averages the accumulated input.
-        acceleration.0 = input.vec.extend(0.0).normalize_or_zero() * cfg.acceleration;
+        acceleration.0 = input.0.extend(0.0).normalize_or_zero() * cfg.acceleration;
 
         if acceleration.0 == Vec3::ZERO {
-            let drag_modulo = cfg.drag * input.cnt as f32 * dt;
+            let drag_modulo = cfg.drag * dt;
 
             if (drag_modulo * drag_modulo) >= velocity.0.length_squared() {
                 velocity.0 = Vec3::ZERO;

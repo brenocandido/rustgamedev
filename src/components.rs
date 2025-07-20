@@ -8,10 +8,7 @@ pub struct Movable;
 /// since the last time the physics simulation was advanced.
 #[derive(Debug, Component, Clone, Copy, PartialEq, Default, Reflect, InspectorOptions)]
 #[reflect(Component)]
-pub struct AccumulatedInput {
-    pub vec: Vec2,
-    pub cnt: i32,
-}
+pub struct AccumulatedInput(pub Vec2);
 
 /// A vector representing the player's velocity in the physics simulation.
 #[derive(

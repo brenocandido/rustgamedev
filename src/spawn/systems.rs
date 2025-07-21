@@ -33,23 +33,18 @@ pub fn spawn_player(
 ) {
     // Player entity
     commands
-        .spawn((
-            Name::new("Player"),
-            Player,
-            Shape2dBundle::circle(
-                meshes.circle.clone(),
-                materials.player.clone(),
-                50.0,
-                Vec2::new(0.0, -150.0),
-            ),
+        .spawn(PlayerBundle::new(
+            &meshes,
+            &materials,
+            Vec2::new(0.0, -150.0),
         ))
         .insert(MovableBundle::default())
         .with_children(|parent| {
             parent.spawn((
-                Camera2d,                            // marker component
-                Transform::from_xyz(0.0, 0.0, 20.0), // where the camera sits
-                GlobalTransform::default(),          // required by the renderer
-                Projection::default(),               // default orthographic projection
+                Camera2d,
+                Transform::from_xyz(0.0, 0.0, 20.0),
+                GlobalTransform::default(),
+                Projection::default(),
             ));
         });
 }

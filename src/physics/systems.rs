@@ -1,5 +1,5 @@
-use crate::{components::*, prelude::PhysicsConfig};
-use bevy::prelude::*;
+use crate::prelude::*;
+use crate::physics::*;
 
 /// Advance the physics simulation by one fixed timestep. This may run zero or multiple times per frame.
 ///

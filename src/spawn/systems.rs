@@ -1,8 +1,5 @@
-use crate::bundles::*;
-use crate::components::*;
-use crate::constants::*;
-use crate::resources::*;
-use bevy::prelude::*;
+use crate::prelude::*;
+use crate::spawn::*;
 
 pub fn load_core_assets(
     mut commands: Commands,

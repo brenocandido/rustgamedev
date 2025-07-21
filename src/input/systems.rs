@@ -1,5 +1,4 @@
-use crate::components::*;
-use bevy::prelude::*;
+use crate::prelude::*;
 
 /// Handle keyboard input and accumulate it in the `AccumulatedInput` component.
 ///

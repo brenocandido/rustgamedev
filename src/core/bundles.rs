@@ -1,17 +1,5 @@
-use crate::components::*;
-use crate::resources::*;
-use bevy::prelude::*;
+use crate::prelude::*;
 use bevy::sprite::{Material2d, MeshMaterial2d};
-
-#[derive(Bundle, Default)]
-pub struct MovableBundle {
-    pub movable: Movable,
-    pub velocity: Velocity,
-    pub input: AccumulatedInput,
-    pub acceleration: Acceleration,
-    pub phy_translation: PhysicalTranslation, // TODO: Ensure phy_translation is initialized to the same as transform
-    pub prev_phy_translation: PreviousPhysicalTranslation,
-}
 
 #[derive(Bundle)]
 pub struct Shape2dBundle<M: Material2d + Clone> {
@@ -53,28 +41,3 @@ impl<M: Material2d + Clone> Shape2dBundle<M> {
     }
 }
 
-#[derive(Bundle)]
-pub struct EnemyBundle {
-    shape: Shape2dBundle<ColorMaterial>,
-    movable: MovableBundle,
-    name: Name,
-}
-
-impl EnemyBundle {
-    pub fn new(
-        meshes: &CoreMeshes,
-        materials: &CoreMaterials,
-        pos: Vec2,
-    ) -> Self {
-        Self {
-            name: Name::new("Enemy"),
-            shape: Shape2dBundle::circle(
-                meshes.circle.clone(),
-                materials.enemy.clone(),   // Handle<ColorMaterial>
-                50.0,
-                pos,
-            ),
-            movable: MovableBundle::default(),
-        }
-    }
-}

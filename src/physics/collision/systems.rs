@@ -1,5 +1,5 @@
-use crate::components::*;
-use bevy::prelude::*;
+use crate::prelude::*;
+use crate::physics::*;
 
 /// System for circle (dynamic) vs rectangle (static wall) collisions.
 pub fn circle_wall_collision_system(

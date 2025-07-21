@@ -1,0 +1,3 @@
+pub const DEFAULT_MAX_SPEED: f32 = 500.0;
+pub const DEFAULT_DRAG: f32 = 250.0;
+pub const DEFAULT_ACCELERATION: f32 = 1000.0;

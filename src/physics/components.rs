@@ -1,14 +1,11 @@
-use bevy::prelude::*;
-use bevy_inspector_egui::prelude::*;
+use crate::prelude::*;
 
 #[derive(Component, Default)]
 pub struct Movable;
 
-/// A vector representing the player's input, accumulated over all frames that ran
-/// since the last time the physics simulation was advanced.
-#[derive(Debug, Component, Clone, Copy, PartialEq, Default, Reflect, InspectorOptions)]
-#[reflect(Component)]
-pub struct AccumulatedInput(pub Vec2);
+#[derive(Component)]
+pub struct Mass(pub f32);
+
 
 /// A vector representing the player's velocity in the physics simulation.
 #[derive(
@@ -43,31 +40,3 @@ pub struct PhysicalTranslation(pub Vec3);
 )]
 #[reflect(Component)]
 pub struct PreviousPhysicalTranslation(pub Vec3);
-
-#[derive(Component)]
-pub struct Wall;
-
-#[derive(Component)]
-pub struct Player;
-
-#[derive(Component)]
-pub struct Mass(pub f32);
-
-#[derive(Debug, Clone, Copy, PartialEq, Reflect, InspectorOptions)]
-pub enum ColliderShape {
-    Circle { radius: f32 },
-    Rect { half_extents: Vec2 }, // half-size in x and y (or x and z) directions
-}
-
-#[derive(Debug, Component, Clone, Copy, PartialEq, Deref, DerefMut, Reflect, InspectorOptions)]
-#[reflect(Component)]
-pub struct Collider(pub ColliderShape);
-
-#[derive(Event)]
-pub struct CollisionEvent(pub Entity, pub Entity);
-
-#[derive(Event, Default)]
-pub struct SpawnEnemiesEvent {
-    pub count: usize,
-    pub pos: Vec2,
-}

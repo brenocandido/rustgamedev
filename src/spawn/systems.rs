@@ -149,10 +149,5 @@ pub fn spawn_enemy(
     pos: Vec2,
 ) {
     // Enemy entity
-    commands
-        .spawn((
-            Name::new("Enemy"),
-            Shape2dBundle::circle(meshes.circle.clone(), materials.enemy.clone(), 50.0, pos),
-        ))
-        .insert(MovableBundle::default());
+    commands.spawn(EnemyBundle::new(meshes, materials, pos));
 }

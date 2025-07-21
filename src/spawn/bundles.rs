@@ -17,7 +17,7 @@ impl EnemyBundle {
             name: Name::new("Enemy"),
             shape: Shape2dBundle::circle(
                 meshes.circle.clone(),
-                materials.enemy.clone(),   // Handle<ColorMaterial>
+                materials.enemy.clone(),
                 50.0,
                 pos,
             ),

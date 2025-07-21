@@ -7,6 +7,7 @@ impl Plugin for GamePlugin {
         app.add_plugins(InspectorPlugin)
             .add_plugins(SpawnerPlugin)
             .add_plugins(PhysicsPlugin)
+            .add_plugins(CombatPlugin)
             .add_plugins(InputPlugin);
     }
 }

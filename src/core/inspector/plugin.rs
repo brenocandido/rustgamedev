@@ -13,6 +13,7 @@ impl Plugin for InspectorPlugin {
             .register_type::<Acceleration>()
             .register_type::<PhysicsConfig>()
             .register_type::<Collider>()
+            .register_type::<Health>()
             .add_plugins(EguiPlugin::default())
             .add_plugins(WorldInspectorPlugin::default());
     }

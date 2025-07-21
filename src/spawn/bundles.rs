@@ -5,6 +5,7 @@ pub struct CharacterBundle {
     shape: Shape2dBundle<ColorMaterial>,
     movable: MovableBundle,
     name: Name,
+    health: Health,
 }
 
 #[derive(Bundle)]
@@ -20,11 +21,17 @@ pub struct PlayerBundle {
 }
 
 impl CharacterBundle {
-    pub fn new(name: &str, meshes: &CoreMeshes, material: Handle<ColorMaterial>, pos: Vec2) -> Self {
+    pub fn new(
+        name: &str,
+        meshes: &CoreMeshes,
+        material: Handle<ColorMaterial>,
+        pos: Vec2,
+    ) -> Self {
         Self {
             name: Name::new(name.to_string()),
             shape: Shape2dBundle::circle(meshes.circle.clone(), material, 50.0, pos),
             movable: MovableBundle::default(),
+            health: Health::new(100.0),
         }
     }
 }

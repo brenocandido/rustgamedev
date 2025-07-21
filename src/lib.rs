@@ -3,6 +3,8 @@ pub mod input;
 pub mod physics;
 pub mod spawn;
 pub mod core;
+pub mod attributes;
+pub mod combat;
 
 pub mod prelude {
     pub use bevy::prelude::*;
@@ -26,4 +28,9 @@ pub mod prelude {
     pub use crate::core::resources::*;
 
     pub use crate::core::inspector::plugin::*;
+
+    pub use crate::attributes::components::*;
+
+    pub use crate::combat::plugin::*;
+    pub use crate::combat::events::*;
 }

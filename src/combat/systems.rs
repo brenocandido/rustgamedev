@@ -7,21 +7,21 @@ pub fn collision_to_damage(
     q_player: Query<(), With<Player>>,
     q_enemy: Query<(), With<Enemy>>,
 ) {
-    for col in ev_collision.read() {
-        let a_is_player = q_player.contains(col.0);
-        let b_is_player = q_player.contains(col.1);
-        let a_is_enemy = q_enemy.contains(col.0);
-        let b_is_enemy = q_enemy.contains(col.1);
+    for ev in ev_collision.read() {
+        if let CollisionEvent::Started(a, b) = *ev {
+            // Identify which side is the player / enemy
+            let a_is_player = q_player.contains(a);
+            let b_is_player = q_player.contains(b);
+            let a_is_enemy = q_enemy.contains(a);
+            let b_is_enemy = q_enemy.contains(b);
 
-        // keep only Player ↔ Enemy contacts, in either order
-        if (a_is_player && b_is_enemy) || (a_is_enemy && b_is_player) {
-            let dmg = 25.0;
-
-            let victim = if a_is_enemy { col.0 } else { col.1 };
-            ev_damage.write(DamageEvent {
-                victim,
-                amount: dmg,
-            });
+            if (a_is_player && b_is_enemy) || (a_is_enemy && b_is_player) {
+                let victim = if a_is_enemy { a } else { b };
+                ev_damage.write(DamageEvent {
+                    victim,
+                    amount: 25.0,
+                });
+            }
         }
     }
 }

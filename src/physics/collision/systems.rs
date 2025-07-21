@@ -1,5 +1,7 @@
 use crate::physics::*;
 use crate::prelude::*;
+use std::collections::HashSet;
+use std::mem;
 
 #[derive(Clone, Copy)]
 struct Contact {
@@ -11,7 +13,7 @@ struct Contact {
 pub fn circle_wall_collision_system(
     mut movers: Query<(Entity, &mut PhysicalTranslation, &mut Velocity, &Collider), With<Velocity>>,
     walls: Query<(Entity, &Transform, &Collider), Without<Velocity>>,
-    mut writer: EventWriter<CollisionEvent>,
+    mut contacts: ResMut<Contacts>,
 ) {
     for (mover, mut pos, mut vel, col) in &mut movers {
         let ColliderShape::Circle { radius } = col.0 else {
@@ -27,7 +29,7 @@ pub fn circle_wall_collision_system(
 
             if let Some(contact) = circle_vs_rect(center, radius, rect_pos, half_extents) {
                 resolve_circle_wall(pos.reborrow(), vel.reborrow(), contact);
-                writer.write(CollisionEvent(mover, wall));
+                contacts.current.insert(ordered_pair(mover, wall));
             }
         }
     }
@@ -42,7 +44,7 @@ pub fn circle_circle_collision_system(
         &Collider,
         Option<&Mass>,
     )>,
-    mut writer: EventWriter<CollisionEvent>,
+    mut contacts: ResMut<Contacts>,
 ) {
     let mut combos = q.iter_combinations_mut::<2>();
     while let Some(
@@ -74,14 +76,39 @@ pub fn circle_circle_collision_system(
                 m2,
                 contact,
             );
-            writer.write(CollisionEvent(e1, e2));
+
+            contacts.current.insert(ordered_pair(e1, e2));
         }
     }
+}
+
+pub fn emit_collision_events(
+    mut contacts: ResMut<Contacts>,
+    mut writer: EventWriter<CollisionEvent>,
+) {
+    let current: HashSet<(Entity, Entity)> = mem::take(&mut contacts.current);
+
+    for &pair in current.difference(&contacts.prev) {
+        writer.write(CollisionEvent::Started(pair.0, pair.1));
+    }
+    for &pair in contacts.prev.difference(&current) {
+        writer.write(CollisionEvent::Stopped(pair.0, pair.1));
+    }
+
+    contacts.prev = current;
 }
 
 //--------------------------------------------------
 // Helper functions
 //--------------------------------------------------
+
+fn ordered_pair(a: Entity, b: Entity) -> (Entity, Entity) {
+    if a.index() < b.index() {
+        (a, b)
+    } else {
+        (b, a)
+    }
+}
 
 fn circle_vs_rect(circle_pos: Vec2, radius: f32, rect_pos: Vec2, half: Vec2) -> Option<Contact> {
     // closest point on the rectangle to the circle centre

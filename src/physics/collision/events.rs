@@ -1,4 +1,7 @@
 use crate::prelude::*;
 
 #[derive(Event)]
-pub struct CollisionEvent(pub Entity, pub Entity);
+pub enum CollisionEvent {
+    Started(Entity, Entity),
+    Stopped(Entity, Entity),
+}

@@ -1,6 +1,6 @@
 use crate::physics::*;
 use crate::prelude::*;
-use std::collections::HashSet;
+use std::collections::HashMap;
 use std::mem;
 
 #[derive(Clone, Copy)]
@@ -11,11 +11,20 @@ struct Contact {
 
 /// System for circle (dynamic) vs rectangle (static wall) collisions.
 pub fn circle_wall_collision_system(
-    mut movers: Query<(Entity, &mut PhysicalTranslation, &mut Velocity, &Collider), With<Velocity>>,
+    mut movers: Query<
+        (
+            Entity,
+            &mut PhysicalTranslation,
+            &mut Velocity,
+            &Collider,
+            &Mass,
+        ),
+        With<Velocity>,
+    >,
     walls: Query<(Entity, &Transform, &Collider), Without<Velocity>>,
     mut contacts: ResMut<Contacts>,
 ) {
-    for (mover, mut pos, mut vel, col) in &mut movers {
+    for (mover, mut pos, mut vel, col, m) in &mut movers {
         let ColliderShape::Circle { radius } = col.0 else {
             continue;
         };
@@ -28,8 +37,9 @@ pub fn circle_wall_collision_system(
             let rect_pos = tf.translation.truncate();
 
             if let Some(contact) = circle_vs_rect(center, radius, rect_pos, half_extents) {
-                resolve_circle_wall(pos.reborrow(), vel.reborrow(), contact);
-                contacts.current.insert(ordered_pair(mover, wall));
+                let data = circle_wall_contact_data(vel.0.truncate(), m.0, &contact);
+                resolve_circle_wall(pos.reborrow(), vel.reborrow(), contact, RESTITUTION);
+                contacts.current.insert(ordered_pair(mover, wall), data);
             }
         }
     }
@@ -64,6 +74,9 @@ pub fn circle_circle_collision_system(
         if let Some(contact) =
             circle_vs_circle(Vec2::new(p1.x, p1.y), r1, Vec2::new(p2.x, p2.y), r2)
         {
+            let data =
+                circle_circle_contact_data(v1.0.truncate(), v2.0.truncate(), m1.0, m2.0, &contact);
+
             resolve_circle_circle(
                 p1.reborrow(),
                 v1.reborrow(),
@@ -72,9 +85,10 @@ pub fn circle_circle_collision_system(
                 v2.reborrow(),
                 m2.0,
                 contact,
+                RESTITUTION
             );
 
-            contacts.current.insert(ordered_pair(e1, e2));
+            contacts.current.insert(ordered_pair(e1, e2), data);
         }
     }
 }
@@ -83,13 +97,17 @@ pub fn emit_collision_events(
     mut contacts: ResMut<Contacts>,
     mut writer: EventWriter<CollisionEvent>,
 ) {
-    let current: HashSet<(Entity, Entity)> = mem::take(&mut contacts.current);
+    let current: HashMap<(Entity, Entity), ContactData> = mem::take(&mut contacts.current);
 
-    for &pair in current.difference(&contacts.prev) {
-        writer.write(CollisionEvent::Started(pair.0, pair.1));
+    for (&pair, data) in &current {
+        if !contacts.prev.contains_key(&pair) {
+            writer.write(CollisionEvent::Started(pair.0, pair.1, data.impulse));
+        }
     }
-    for &pair in contacts.prev.difference(&current) {
-        writer.write(CollisionEvent::Stopped(pair.0, pair.1));
+    for pair in contacts.prev.keys() {
+        if !current.contains_key(pair) {
+            writer.write(CollisionEvent::Stopped(pair.0, pair.1));
+        }
     }
 
     contacts.prev = current;
@@ -156,46 +174,79 @@ fn resolve_circle_wall(
     mut circle_pos: Mut<PhysicalTranslation>,
     mut circle_vel: Mut<Velocity>,
     contact: Contact,
+    restitution: f32,
 ) {
-    // elastic bounce
+    // Split velocity into normal & tangential parts
     let vel2d = Vec2::new(circle_vel.x, circle_vel.y);
-    let v_dot_n = vel2d.dot(contact.normal);
-    let reflect = vel2d - 2.0 * v_dot_n * contact.normal;
-    circle_vel.x = reflect.x;
-    circle_vel.y = reflect.y;
+    let v_n = vel2d.dot(contact.normal);
+
+    // Only flip if we were moving into the wall
+    if v_n < 0.0 {
+        // v' = v - (1 + e) * (v·n) * n
+        let reflected = vel2d - (1.0 + restitution) * v_n * contact.normal;
+        circle_vel.x = reflected.x;
+        circle_vel.y = reflected.y;
+    }
 
     circle_pos.x += contact.normal.x * contact.penetration;
     circle_pos.y += contact.normal.y * contact.penetration;
 }
 
+#[allow(clippy::too_many_arguments)]
 fn resolve_circle_circle(
-    mut pos1: Mut<PhysicalTranslation>,
-    mut vel1: Mut<Velocity>,
-    m1: f32,
-    mut pos2: Mut<PhysicalTranslation>,
-    mut vel2: Mut<Velocity>,
-    m2: f32,
+    mut pos1: Mut<PhysicalTranslation>, mut vel1: Mut<Velocity>, m1: f32,
+    mut pos2: Mut<PhysicalTranslation>, mut vel2: Mut<Velocity>, m2: f32,
     contact: Contact,
+    restitution: f32,
 ) {
-    // elastic exchange (vector form)
-    let v1 = Vec2::new(vel1.x, vel1.y);
-    let v2 = Vec2::new(vel2.x, vel2.y);
-    let n = contact.normal;
+    let n   = contact.normal;           // Vec2, unit, points 1 → 2
+    let n3  = n.extend(0.0);            // Vec3
 
-    let v1n = v1 - (2.0 * m2 / (m1 + m2)) * (v1 - v2).dot(n) * n;
-    let v2n = v2 - (2.0 * m1 / (m1 + m2)) * (v2 - v1).dot(n) * n;
+    // ── 1. impulse (only if approaching) ────────────────────────────────
+    let rel_speed = (Vec2::new(vel1.x, vel1.y) - Vec2::new(vel2.x, vel2.y)).dot(n);
 
-    vel1.x = v1n.x;
-    vel1.y = v1n.y;
-    vel2.x = v2n.x;
-    vel2.y = v2n.y;
+    if rel_speed > 0.0 {                // approaching
+        let j = -(1.0 + restitution) * rel_speed / (1.0 / m1 + 1.0 / m2);
+        let impulse = n3 * j;
+        vel1.0 += impulse / m1;
+        vel2.0 -= impulse / m2;
+    }
+    // If rel_speed ≤ 0 we skip the bounce, but we **continue** to separation
 
-    let total = m1 + m2;
-    let corr1 = contact.penetration * (m2 / total);
-    let corr2 = contact.penetration * (m1 / total);
+    // ── 2. depenetration (always) ───────────────────────────────────────
+    if contact.penetration > 0.0 {
+        let total_m = m1 + m2;
+        let corr1   = contact.penetration * (m2 / total_m);
+        let corr2   = contact.penetration * (m1 / total_m);
 
-    pos1.x -= n.x * corr1;
-    pos1.y -= n.y * corr1;
-    pos2.x += n.x * corr2;
-    pos2.y += n.y * corr2;
+        pos1.0 -= n3 * corr1;
+        pos2.0 += n3 * corr2;
+    }
+}
+
+fn circle_wall_contact_data(vel: Vec2, m: f32, contact: &Contact) -> ContactData {
+    let v_n = Vec2::new(vel.x, vel.y).dot(contact.normal);
+    if v_n < 0.0 {
+        let j_abs = -(1.0 + RESTITUTION) * v_n * m;
+        ContactData { impulse: j_abs }
+    } else {
+        ContactData { impulse: 0.0 }
+    }
+}
+
+fn circle_circle_contact_data(
+    v1: Vec2,
+    v2: Vec2,
+    m1: f32,
+    m2: f32,
+    contact: &Contact,
+) -> ContactData {
+    let rel_vel = v2 - v1;
+    let closing = rel_vel.dot(contact.normal);
+    if closing < 0.0 {
+        let j_abs = -(1.0 + RESTITUTION) * closing / (1.0 / m1 + 1.0 / m2);
+        ContactData { impulse: j_abs }
+    } else {
+        ContactData { impulse: 0.0 }
+    }
 }

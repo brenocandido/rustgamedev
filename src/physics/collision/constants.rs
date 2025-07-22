@@ -1,0 +1,1 @@
+pub const RESTITUTION: f32 = 1.0;

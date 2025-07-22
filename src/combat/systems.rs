@@ -8,7 +8,9 @@ pub fn collision_to_damage(
     q_enemy: Query<(), With<Enemy>>,
 ) {
     for ev in ev_collision.read() {
-        if let CollisionEvent::Started(a, b) = *ev {
+        if let CollisionEvent::Started(a, b, impulse) = *ev {
+            println!("Collision impulse: {impulse}");
+
             // Identify which side is the player / enemy
             let a_is_player = q_player.contains(a);
             let b_is_player = q_player.contains(b);

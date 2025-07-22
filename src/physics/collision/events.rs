@@ -2,6 +2,16 @@ use crate::prelude::*;
 
 #[derive(Event)]
 pub enum CollisionEvent {
-    Started(Entity, Entity, f32 /* impulse N·s */),
-    Stopped(Entity, Entity),
+    Started {
+        a: Entity,
+        b: Entity,
+        impulse: f32, /* impulse N·s */
+        v_a_n: f32,
+        v_b_n: f32,
+    },
+
+    Stopped {
+        a: Entity,
+        b: Entity,
+    },
 }

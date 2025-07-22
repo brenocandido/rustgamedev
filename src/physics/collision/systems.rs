@@ -85,7 +85,7 @@ pub fn circle_circle_collision_system(
                 v2.reborrow(),
                 m2.0,
                 contact,
-                RESTITUTION
+                RESTITUTION,
             );
 
             contacts.current.insert(ordered_pair(e1, e2), data);
@@ -101,12 +101,21 @@ pub fn emit_collision_events(
 
     for (&pair, data) in &current {
         if !contacts.prev.contains_key(&pair) {
-            writer.write(CollisionEvent::Started(pair.0, pair.1, data.impulse));
+            writer.write(CollisionEvent::Started {
+                a: pair.0,
+                b: pair.1,
+                impulse: data.impulse,
+                v_a_n: data.v_a_n,
+                v_b_n: data.v_b_n,
+            });
         }
     }
     for pair in contacts.prev.keys() {
         if !current.contains_key(pair) {
-            writer.write(CollisionEvent::Stopped(pair.0, pair.1));
+            writer.write(CollisionEvent::Stopped {
+                a: pair.0,
+                b: pair.1,
+            });
         }
     }
 
@@ -194,18 +203,23 @@ fn resolve_circle_wall(
 
 #[allow(clippy::too_many_arguments)]
 fn resolve_circle_circle(
-    mut pos1: Mut<PhysicalTranslation>, mut vel1: Mut<Velocity>, m1: f32,
-    mut pos2: Mut<PhysicalTranslation>, mut vel2: Mut<Velocity>, m2: f32,
+    mut pos1: Mut<PhysicalTranslation>,
+    mut vel1: Mut<Velocity>,
+    m1: f32,
+    mut pos2: Mut<PhysicalTranslation>,
+    mut vel2: Mut<Velocity>,
+    m2: f32,
     contact: Contact,
     restitution: f32,
 ) {
-    let n   = contact.normal;           // Vec2, unit, points 1 → 2
-    let n3  = n.extend(0.0);            // Vec3
+    let n = contact.normal; // Vec2, unit, points 1 → 2
+    let n3 = n.extend(0.0); // Vec3
 
     // ── 1. impulse (only if approaching) ────────────────────────────────
     let rel_speed = (Vec2::new(vel1.x, vel1.y) - Vec2::new(vel2.x, vel2.y)).dot(n);
 
-    if rel_speed > 0.0 {                // approaching
+    if rel_speed > 0.0 {
+        // approaching
         let j = -(1.0 + restitution) * rel_speed / (1.0 / m1 + 1.0 / m2);
         let impulse = n3 * j;
         vel1.0 += impulse / m1;
@@ -216,8 +230,8 @@ fn resolve_circle_circle(
     // ── 2. depenetration (always) ───────────────────────────────────────
     if contact.penetration > 0.0 {
         let total_m = m1 + m2;
-        let corr1   = contact.penetration * (m2 / total_m);
-        let corr2   = contact.penetration * (m1 / total_m);
+        let corr1 = contact.penetration * (m2 / total_m);
+        let corr2 = contact.penetration * (m1 / total_m);
 
         pos1.0 -= n3 * corr1;
         pos2.0 += n3 * corr2;
@@ -225,12 +239,19 @@ fn resolve_circle_circle(
 }
 
 fn circle_wall_contact_data(vel: Vec2, m: f32, contact: &Contact) -> ContactData {
-    let v_n = Vec2::new(vel.x, vel.y).dot(contact.normal);
-    if v_n < 0.0 {
-        let j_abs = -(1.0 + RESTITUTION) * v_n * m;
-        ContactData { impulse: j_abs }
+    let v_a_n = vel.dot(contact.normal);
+    let v_b_n = 0.0; // Because it's a wall
+
+    let impulse = if v_a_n < 0.0 {
+        -(1.0 + RESTITUTION) * v_a_n * m
     } else {
-        ContactData { impulse: 0.0 }
+        0.0
+    };
+
+    ContactData {
+        impulse,
+        v_a_n: -v_a_n,  // Flips the speed because the normal vector is point towards the circle.
+        v_b_n,
     }
 }
 
@@ -243,10 +264,19 @@ fn circle_circle_contact_data(
 ) -> ContactData {
     let rel_vel = v2 - v1;
     let closing = rel_vel.dot(contact.normal);
-    if closing < 0.0 {
-        let j_abs = -(1.0 + RESTITUTION) * closing / (1.0 / m1 + 1.0 / m2);
-        ContactData { impulse: j_abs }
+
+    let impulse = if closing < 0.0 {
+        -(1.0 + RESTITUTION) * closing / (1.0 / m1 + 1.0 / m2)
     } else {
-        ContactData { impulse: 0.0 }
+        0.0
+    };
+
+    let v_a_n = v1.dot(contact.normal);
+    let v_b_n = v2.dot(contact.normal);
+
+    ContactData {
+        impulse,
+        v_a_n,
+        v_b_n,
     }
 }

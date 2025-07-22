@@ -15,9 +15,13 @@ impl Health {
         self.current <= 0.0
     }
     pub fn damage(&mut self, amt: f32) {
-        self.current = (self.current - amt).max(0.0);
+        if amt > 0.0 {
+            self.current = (self.current - amt).max(0.0);
+        }
     }
     pub fn heal(&mut self, amt: f32) {
-        self.current = (self.current + amt).min(self.max);
+        if amt > 0.0 {
+            self.current = (self.current + amt).min(self.max);
+        }
     }
 }

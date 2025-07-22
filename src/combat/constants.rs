@@ -1,0 +1,1 @@
+pub const BASE_COLLISION_DAMAGE: f32 = 50.0;

@@ -6,6 +6,11 @@ pub struct Movable;
 #[derive(Component)]
 pub struct Mass(pub f32);
 
+impl Default for Mass {
+    fn default() -> Self {
+        Mass(1.0)
+    }
+}
 
 /// A vector representing the player's velocity in the physics simulation.
 #[derive(

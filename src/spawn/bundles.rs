@@ -6,6 +6,7 @@ pub struct CharacterBundle {
     movable: MovableBundle,
     name: Name,
     health: Health,
+    mass: Mass,
 }
 
 #[derive(Bundle)]
@@ -32,6 +33,7 @@ impl CharacterBundle {
             shape: Shape2dBundle::circle(meshes.circle.clone(), material, 50.0, pos),
             movable: MovableBundle::default(),
             health: Health::new(100.0),
+            mass: Mass::default(),
         }
     }
 }

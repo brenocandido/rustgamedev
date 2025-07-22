@@ -42,15 +42,15 @@ pub fn circle_circle_collision_system(
         &mut PhysicalTranslation,
         &mut Velocity,
         &Collider,
-        Option<&Mass>,
+        &Mass,
     )>,
     mut contacts: ResMut<Contacts>,
 ) {
     let mut combos = q.iter_combinations_mut::<2>();
     while let Some(
         [
-            (e1, mut p1, mut v1, col1, m1_opt),
-            (e2, mut p2, mut v2, col2, m2_opt),
+            (e1, mut p1, mut v1, col1, m1),
+            (e2, mut p2, mut v2, col2, m2),
         ],
     ) = combos.fetch_next()
     {
@@ -64,16 +64,13 @@ pub fn circle_circle_collision_system(
         if let Some(contact) =
             circle_vs_circle(Vec2::new(p1.x, p1.y), r1, Vec2::new(p2.x, p2.y), r2)
         {
-            let m1 = m1_opt.map_or(1.0, |m| m.0);
-            let m2 = m2_opt.map_or(1.0, |m| m.0);
-
             resolve_circle_circle(
                 p1.reborrow(),
                 v1.reborrow(),
-                m1,
+                m1.0,
                 p2.reborrow(),
                 v2.reborrow(),
-                m2,
+                m2.0,
                 contact,
             );
 

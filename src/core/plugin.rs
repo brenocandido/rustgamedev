@@ -8,6 +8,7 @@ impl Plugin for GamePlugin {
             .add_plugins(SpawnerPlugin)
             .add_plugins(PhysicsPlugin)
             .add_plugins(CombatPlugin)
+            .add_plugins(BehaviorPlugin)
             .add_plugins(InputPlugin);
     }
 }

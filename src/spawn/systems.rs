@@ -144,5 +144,12 @@ pub fn spawn_enemy(
     pos: Vec2,
 ) {
     // Enemy entity
-    commands.spawn(EnemyBundle::new(meshes, materials, pos));
+    commands
+        .spawn(EnemyBundle::new(meshes, materials, pos))
+        .insert((
+            Ally,
+            // Flee { distance: 150.0 },
+            AvoidAllies { radius: 50.0 },
+            Wander::default(),
+        ));
 }

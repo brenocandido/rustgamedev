@@ -5,6 +5,7 @@ pub mod spawn;
 pub mod core;
 pub mod attributes;
 pub mod combat;
+pub mod behavior;
 
 pub mod prelude {
     pub use bevy::prelude::*;
@@ -33,4 +34,7 @@ pub mod prelude {
 
     pub use crate::combat::plugin::*;
     pub use crate::combat::events::*;
+
+    pub use crate::behavior::components::*;
+    pub use crate::behavior::plugin::*;
 }

@@ -12,7 +12,7 @@ impl Plugin for InputPlugin {
                 // The physics simulation needs to know the player's input, so we run this before the fixed timestep loop.
                 // Note that if we ran it in `Update`, it would be too late, as the physics simulation would already have been advanced.
                 // If we ran this in `FixedUpdate`, it would sometimes not register player input, as that schedule may run zero times per frame.
-                handle_input.in_set(RunFixedMainLoopSystem::BeforeFixedMainLoop),
+                handle_input.in_set(RunFixedMainLoopSystems::BeforeFixedMainLoop),
             ),
         );
     }

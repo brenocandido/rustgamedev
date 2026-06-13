@@ -4,7 +4,7 @@ pub struct CombatPlugin;
 
 impl Plugin for CombatPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<DamageEvent>().add_systems(
+        app.add_message::<DamageEvent>().add_systems(
             FixedUpdate,
             (
                 collision_to_damage.after(crate::physics::advance_physics),

@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-#[derive(Event, Default)]
+#[derive(Message, Default)]
 pub struct SpawnEnemiesEvent {
     pub count: usize,
     pub pos: Vec2,

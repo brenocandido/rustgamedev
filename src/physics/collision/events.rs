@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-#[derive(Event)]
+#[derive(Message)]
 pub enum CollisionEvent {
     Started {
         a: Entity,

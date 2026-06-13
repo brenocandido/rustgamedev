@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::sprite::{Material2d, MeshMaterial2d};
+use bevy::sprite_render::{Material2d, MeshMaterial2d};
 
 #[derive(Bundle)]
 pub struct Shape2dBundle<M: Material2d + Clone> {

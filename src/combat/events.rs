@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-#[derive(Event)]
+#[derive(Message)]
 pub struct DamageEvent {
     pub victim: Entity,
     pub amount: f32,

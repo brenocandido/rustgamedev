@@ -105,7 +105,7 @@ pub fn spawn_text(mut commands: Commands) {
 }
 
 pub fn spawn_enemy_on_key(
-    mut writer: EventWriter<SpawnEnemiesEvent>,
+    mut writer: MessageWriter<SpawnEnemiesEvent>,
     keys: Res<ButtonInput<KeyCode>>,
 ) {
     if keys.just_pressed(KeyCode::Digit0) {
@@ -120,7 +120,7 @@ pub fn spawn_enemies_event_handler(
     mut commands: Commands,
     meshes: Res<CoreMeshes>,
     materials: Res<CoreMaterials>,
-    mut reader: EventReader<SpawnEnemiesEvent>,
+    mut reader: MessageReader<SpawnEnemiesEvent>,
 ) {
     for SpawnEnemiesEvent { count, pos } in reader.read() {
         for i in 0..*count {

@@ -95,7 +95,7 @@ pub fn circle_circle_collision_system(
 
 pub fn emit_collision_events(
     mut contacts: ResMut<Contacts>,
-    mut writer: EventWriter<CollisionEvent>,
+    mut writer: MessageWriter<CollisionEvent>,
 ) {
     let current: HashMap<(Entity, Entity), ContactData> = mem::take(&mut contacts.current);
 

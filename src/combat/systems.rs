@@ -2,8 +2,8 @@ use crate::combat::*;
 use crate::prelude::*;
 
 pub fn collision_to_damage(
-    mut ev_collision: EventReader<CollisionEvent>,
-    mut ev_damage: EventWriter<DamageEvent>,
+    mut ev_collision: MessageReader<CollisionEvent>,
+    mut ev_damage: MessageWriter<DamageEvent>,
 
     cfg: Res<PhysicsConfig>,
 
@@ -45,7 +45,7 @@ pub fn collision_to_damage(
 }
 
 pub fn apply_damage(
-    mut ev_damage: EventReader<DamageEvent>,
+    mut ev_damage: MessageReader<DamageEvent>,
     mut q_health: Query<&mut Health>,
     mut commands: Commands,
 ) {

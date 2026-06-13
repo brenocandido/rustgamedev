@@ -5,7 +5,7 @@ pub struct SpawnerPlugin;
 
 impl Plugin for SpawnerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<SpawnEnemiesEvent>()
+        app.add_message::<SpawnEnemiesEvent>()
             .add_systems(Startup, load_core_assets)
             .add_systems(
                 Startup,

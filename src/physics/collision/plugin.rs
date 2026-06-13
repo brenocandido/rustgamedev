@@ -18,7 +18,7 @@ impl Plugin for CollisionPlugin {
             )
             // Resources and events
             .init_resource::<Contacts>()
-            .add_event::<CollisionEvent>()
+            .add_message::<CollisionEvent>()
             // Systems
             .add_systems(
                 FixedUpdate,

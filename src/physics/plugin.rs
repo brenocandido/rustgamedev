@@ -18,7 +18,7 @@ impl Plugin for PhysicsPlugin {
                     // This could be run in `Update`, but if we run it here instead, the systems in `Update`
                     // will be working with the `Transform` that will actually be shown on screen.
                     interpolate_rendered_transform
-                        .in_set(RunFixedMainLoopSystem::AfterFixedMainLoop),
+                        .in_set(RunFixedMainLoopSystems::AfterFixedMainLoop),
                 ),
             );
     }

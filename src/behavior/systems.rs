@@ -1,4 +1,8 @@
-use crate::{behavior::DEFAULT_PUSH_WEIGHT, prelude::*};
+use crate::behavior::{
+    DEFAULT_PUSH_WEIGHT, WANDER_ACCEL_VARIATION_RATE, WANDER_MAX_ACCEL_MULTIPLIER,
+    WANDER_MIN_ACCEL_MULTIPLIER, WANDER_TURN_VARIATION_RATE,
+};
+use crate::prelude::*;
 use fastrand;
 
 pub fn seek_player_system(
@@ -68,7 +72,8 @@ pub fn wander_system(
     for (mut wander, mut input) in enemies.iter_mut() {
         // Change the current variation slowly over time using random noise.
         // This results in a smoother change of direction instead of jittering back and forth.
-        let delta_variation = (fastrand::f32() * 2.0 - 1.0) * wander.base_variation * 2.0 * dt;
+        let delta_variation =
+            (fastrand::f32() * 2.0 - 1.0) * wander.base_variation * WANDER_TURN_VARIATION_RATE * dt;
         wander.current_variation += delta_variation;
 
         // Clamp current_variation so it doesn't spin wildly.
@@ -81,17 +86,18 @@ pub fn wander_system(
             .direction
             .rotate(Vec2::from_angle(wander.current_variation * dt));
 
-        // Smoothly vary the movement speed (acceleration) over time
-        // This allows them to speed up and slow down organically
-        let delta_speed = (fastrand::f32() * 2.0 - 1.0) * 0.2 * dt;
-        wander.current_speed += delta_speed;
+        // Smoothly vary the movement acceleration over time
+        // This allows them to organically speed up and slow down their application of force
+        let delta_accel = (fastrand::f32() * 2.0 - 1.0) * WANDER_ACCEL_VARIATION_RATE * dt;
+        wander.current_accel_multiplier += delta_accel;
 
-        // Clamp the speed to a range so it doesn't stop entirely or go too fast.
-        // We set the max to 0.2 (20% max acceleration) since 0.3 was still too fast.
-        wander.current_speed = wander.current_speed.clamp(0.05, 0.20);
+        // Clamp the multiplier to a range so it doesn't stop entirely or go too fast.
+        wander.current_accel_multiplier = wander
+            .current_accel_multiplier
+            .clamp(WANDER_MIN_ACCEL_MULTIPLIER, WANDER_MAX_ACCEL_MULTIPLIER);
 
         // Apply the force vector to the input
-        input.0 += wander.direction * wander.current_speed;
+        input.0 += wander.direction * wander.current_accel_multiplier;
     }
 }
 

@@ -13,11 +13,14 @@ pub struct Flee {
     pub distance: f32,
 }
 
+#[derive(Resource, Debug, Reflect, InspectorOptions)]
+#[reflect(Resource)]
 #[derive(Component)]
 pub struct Wander {
     pub direction: Vec2,
     pub current_variation: f32, // Angle that will be incremented wi //TODO
     pub base_variation: f32,    // In radians
+    pub current_speed: f32,     // Fraction of max acceleration (0.0 to 1.0)
 }
 
 #[derive(Component)]
@@ -43,6 +46,7 @@ impl Default for Wander {
             direction: Vec2::from_angle(angle),
             base_variation: WANDER_DEFAULT_BASE_VARIATION,
             current_variation: 0.0,
+            current_speed: 0.1, // Start with a slow initial acceleration
         }
     }
 }

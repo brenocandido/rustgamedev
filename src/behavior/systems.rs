@@ -44,13 +44,35 @@ pub fn wander_system(
     fixed_time: Res<Time<Fixed>>,
     mut enemies: Query<(&mut Wander, &mut AccumulatedInput), Without<Player>>,
 ) {
-    for (mut wander, mut input) in enemies.iter_mut() {
-        let rand_var =
-            wander.base_variation * (fastrand::f32() * 2.0 - 1.0) * fixed_time.delta_secs();
-        wander.direction = wander.direction.rotate(Vec2::from_angle(rand_var));
-        println!("Direction: {0:?}", wander.direction);
+    let dt = fixed_time.delta_secs();
 
-        input.0 += wander.direction * 0.0001; // Accumulate force
+    for (mut wander, mut input) in enemies.iter_mut() {
+        // Change the current variation slowly over time using random noise.
+        // This results in a smoother change of direction instead of jittering back and forth.
+        let delta_variation = (fastrand::f32() * 2.0 - 1.0) * wander.base_variation * 2.0 * dt;
+        wander.current_variation += delta_variation;
+
+        // Clamp current_variation so it doesn't spin wildly.
+        wander.current_variation = wander
+            .current_variation
+            .clamp(-wander.base_variation, wander.base_variation);
+
+        // Apply the turn rate to the direction
+        wander.direction = wander
+            .direction
+            .rotate(Vec2::from_angle(wander.current_variation * dt));
+
+        // Smoothly vary the movement speed (acceleration) over time
+        // This allows them to speed up and slow down organically
+        let delta_speed = (fastrand::f32() * 2.0 - 1.0) * 0.2 * dt;
+        wander.current_speed += delta_speed;
+
+        // Clamp the speed to a range so it doesn't stop entirely or go too fast.
+        // We set the max to 0.2 (20% max acceleration) since 0.3 was still too fast.
+        wander.current_speed = wander.current_speed.clamp(0.05, 0.20);
+
+        // Apply the force vector to the input
+        input.0 += wander.direction * wander.current_speed;
     }
 }
 

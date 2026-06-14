@@ -14,6 +14,7 @@ impl Plugin for InspectorPlugin {
             .register_type::<PhysicsConfig>()
             .register_type::<Collider>()
             .register_type::<Health>()
+            .register_type::<Wander>()
             .add_plugins(EguiPlugin::default())
             .add_plugins(WorldInspectorPlugin::default());
     }

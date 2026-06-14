@@ -42,7 +42,7 @@ pub fn spawn_player(
         .with_children(|parent| {
             parent.spawn((
                 Camera2d,
-                Transform::from_xyz(0.0, 0.0, 20.0),
+                Transform::from_xyz(0.0, 0.0, 30.0),
                 GlobalTransform::default(),
                 Projection::default(),
             ));

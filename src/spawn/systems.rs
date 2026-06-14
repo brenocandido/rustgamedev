@@ -148,7 +148,7 @@ pub fn spawn_enemy(
         .spawn(EnemyBundle::new(meshes, materials, pos))
         .insert((
             Ally,
-            // Flee { distance: 150.0 },
+            Flee { distance: 150.0 },
             AvoidAllies { radius: 50.0 },
             Wander::default(),
         ));

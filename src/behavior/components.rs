@@ -42,6 +42,7 @@ impl Default for Wander {
         Self {
             direction: Vec2::from_angle(angle),
             base_variation: WANDER_DEFAULT_BASE_VARIATION,
+            current_variation: 0.0,
         }
     }
 }

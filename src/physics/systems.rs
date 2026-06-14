@@ -35,15 +35,15 @@ pub fn advance_physics(
         // Need to normalize and scale because otherwise diagonal movement would be faster than horizontal or vertical
         // movement.
         // This effectively averages the accumulated input.
-        acceleration.0 = input.extend(0.0).normalize_or_zero() * cfg.acceleration;
+        acceleration.0 = input.extend(0.0).clamp_length_max(1.0) * cfg.acceleration;
 
         let drag_component = cfg.drag * dt;
 
-        if acceleration.x < f32::EPSILON {
+        if acceleration.x.abs() < f32::EPSILON {
             apply_drag_component(&mut velocity.x, drag_component);
         }
 
-        if acceleration.y < f32::EPSILON {
+        if acceleration.y.abs() < f32::EPSILON {
             apply_drag_component(&mut velocity.y, drag_component);
         }
 
@@ -88,7 +88,9 @@ pub fn interpolate_rendered_transform(
 
 #[inline(always)]
 fn apply_drag_component(v: &mut f32, drag_modulo: f32) {
-    if v.abs() < f32::EPSILON { return; }
+    if v.abs() < f32::EPSILON {
+        return;
+    }
 
     let delta = drag_modulo.min(v.abs());
     *v -= v.signum() * delta;

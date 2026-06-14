@@ -32,10 +32,11 @@ pub fn advance_physics(
         mut acceleration,
     ) in query.iter_mut()
     {
-        // Need to normalize and scale because otherwise diagonal movement would be faster than horizontal or vertical
-        // movement.
-        // This effectively averages the accumulated input.
-        acceleration.0 = input.extend(0.0).clamp_length_max(1.0) * cfg.acceleration;
+        // Clamping length instead of normalizing allows partial inputs (like from AI or gamepad)
+        // while still preventing diagonal movement from being faster than 1.0.
+        let clamped_input = input.extend(0.0).clamp_length_max(1.0);
+        let input_len = clamped_input.length();
+        acceleration.0 = clamped_input * cfg.acceleration;
 
         let drag_component = cfg.drag * dt;
 
@@ -48,6 +49,23 @@ pub fn advance_physics(
         }
 
         velocity.0 += acceleration.0 * dt;
+
+        // Dynamically scale the target max speed based on input magnitude. 
+        // This prevents an AI continuously applying a 20% acceleration from eventually reaching 100% max speed!
+        let effective_max_speed = if input_len > f32::EPSILON {
+            cfg.max_speed * input_len
+        } else {
+            cfg.max_speed // fallback to global max speed when no input is provided so standard drag applies
+        };
+
+        if velocity.0.length_squared() > effective_max_speed * effective_max_speed {
+            // Gently decelerate down to the effective max speed using the engine's drag parameter
+            let current_speed = velocity.0.length();
+            let new_speed = (current_speed - drag_component).max(effective_max_speed);
+            velocity.0 = velocity.normalize_or_zero() * new_speed;
+        }
+
+        // Hard clamp to absolute global max speed to preserve the original engine's strict limit
         if velocity.0.length_squared() > max_speed_sq {
             velocity.0 = velocity.normalize_or_zero() * cfg.max_speed;
         }

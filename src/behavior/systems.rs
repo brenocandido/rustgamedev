@@ -1,6 +1,6 @@
 use crate::behavior::{
     DEFAULT_PUSH_WEIGHT, WANDER_ACCEL_VARIATION_RATE, WANDER_MAX_ACCEL_MULTIPLIER,
-    WANDER_MIN_ACCEL_MULTIPLIER, WANDER_TURN_VARIATION_RATE,
+    WANDER_MIN_ACCEL_MULTIPLIER, WANDER_RECENTER_RATE, WANDER_TURN_VARIATION_RATE,
 };
 use crate::prelude::*;
 use fastrand;
@@ -75,6 +75,10 @@ pub fn wander_system(
         let delta_variation =
             (fastrand::f32() * 2.0 - 1.0) * wander.base_variation * WANDER_TURN_VARIATION_RATE * dt;
         wander.current_variation += delta_variation;
+
+        // Gently pull the steering wheel back to center (0.0) over tim so the
+        // entity isn't stuck walking in circles.
+        wander.current_variation -= wander.current_variation * WANDER_RECENTER_RATE * dt;
 
         // Clamp current_variation so it doesn't spin wildly.
         wander.current_variation = wander
